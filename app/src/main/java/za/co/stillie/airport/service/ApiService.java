@@ -1,12 +1,9 @@
 package za.co.stillie.airport.service;
 
-import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 import za.co.stillie.airport.BuildConfig;
-import za.co.stillie.airport.service.models.FlightScheduleResponse;
 
 public interface ApiService {
     @GET(BuildConfig.AVIATION_API_NEARBY_URL)

@@ -3,13 +3,6 @@ package za.co.stillie.airport.di;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.google.gson.Gson;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
 import java.io.IOException;
 
 import okhttp3.HttpUrl;
@@ -44,28 +37,6 @@ public class CustomInterceptor implements Interceptor {
             Request.Builder requestBuilder = setup(request, newUrl);
             request = requestBuilder.build();
         }
-
-        Response response = aChain.proceed(request);
-
-        String stringGson = new Gson().toJson(response.body());
-
-        try {
-            Object responseObject = new JSONTokener(stringGson).nextValue();
-            if (responseObject instanceof JSONObject) {
-
-//                handleJSONObjectResponse(response, stringGson);
-
-            } else if (responseObject instanceof JSONArray) {
-
-//                if (handleJSONArrayResponse(response, stringGson) != null && handleJSONArrayResponse(response, stringGson).size() > 0) {
-//                    mMutableLiveData.setValue(handleJSONArrayResponse(response, stringGson));
-//                }
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-
         return aChain.proceed(request);
     }
 
