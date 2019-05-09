@@ -1,7 +1,10 @@
 <resources>
-    <string name="app_name">AirPort</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="app_name">Vlugsoektog (Flight Searcher)</string>
     <string name="generic_error_message">An error has occurred, please try again</string>
     <string name="lbl_OK">Okay</string>
     <string name="msg_request_permissions">Please accept location permissions</string>
+    <string name="lbl_destination">Destination</string>
+    <string name="lbl_flight_number">Flight number</string>
+    <string name="lbl_departure_time">Departure Time</string>
+    <string name="lbl_location_type">Airport</string>
 </resources>

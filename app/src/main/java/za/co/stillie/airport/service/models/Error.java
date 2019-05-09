@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 public class Error {
 
     @SerializedName("text")
-    @Expose
+
     private String text;
 
     public String getText() {

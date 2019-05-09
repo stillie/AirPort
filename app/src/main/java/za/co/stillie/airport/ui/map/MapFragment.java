@@ -1,6 +1,5 @@
 package za.co.stillie.airport.ui.map;
 
-import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -9,31 +8,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 
-import pub.devrel.easypermissions.AfterPermissionGranted;
-import pub.devrel.easypermissions.EasyPermissions;
-import za.co.stillie.airport.R;
 import za.co.stillie.airport.base.BaseFragment;
 import za.co.stillie.airport.databinding.FragmentMapBinding;
 import za.co.stillie.airport.di.MyViewModelFactory;
+import za.co.stillie.airport.service.models.NearbyResponse;
+import za.co.stillie.airport.ui.flight_schedule.FlightScheduleActivity;
 
-public class MapFragment extends BaseFragment implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
+public class MapFragment extends BaseFragment implements MapViewModel.MarkerOnClick {
 
     @Inject
     MyViewModelFactory mFactory;
-
-    private MutableLiveData<LatLng> mCurrentLatLng = new MutableLiveData<>();
-    private GoogleMap mGoogleMap;
     private MapViewModel mMapViewModel;
     private FragmentMapBinding mFragmentMapBinding;
 
@@ -41,15 +29,27 @@ public class MapFragment extends BaseFragment implements OnMapReadyCallback, Goo
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mMapViewModel = ViewModelProviders.of(this, mFactory).get(MapViewModel.class);
-        mCurrentLatLng.observe(this, this::centerMap);
     }
 
+    @Override
+    public void onMarkerClicked(NearbyResponse aNearbyResponse) {
+        startActivity(FlightScheduleActivity.getStartIntent(getContext(), aNearbyResponse));
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NotNull String[] permissions, @NotNull int[] grantResults) {
+        if (requestCode == BaseFragment.LOCATION_PERMISSIONS_CODE) {
+            mMapViewModel.initMap(getBaseActivity(), mFragmentMapBinding.mapView);
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mFragmentMapBinding = FragmentMapBinding.inflate(getLayoutInflater());
-        mFragmentMapBinding.mapView.getMapAsync(this);
+        mMapViewModel.initMap(getBaseActivity(), mFragmentMapBinding.mapView);
+        mMapViewModel.setMarkerOnClick(this);
         mFragmentMapBinding.mapView.onCreate(savedInstanceState);
         return mFragmentMapBinding.getRoot();
     }
@@ -82,57 +82,5 @@ public class MapFragment extends BaseFragment implements OnMapReadyCallback, Goo
     public void onDestroy() {
         super.onDestroy();
         mFragmentMapBinding.mapView.onDestroy();
-    }
-
-    @AfterPermissionGranted(LOCATION_PERMISSIONS_CODE)
-    private void getCurrentLocation() {
-        if (EasyPermissions.hasPermissions(requireContext(), LOCATION_PERMISSIONS_LIST)) {
-
-            FusedLocationProviderClient mFusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
-            try {
-
-                mFusedLocationClient.getLastLocation().addOnSuccessListener(getBaseActivity(), location -> {
-                    if (location != null) {
-                        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                        mCurrentLatLng.setValue(latLng);
-                    } else {
-//                        displayDialog(getString(R.string.msg_location_error));
-                    }
-                });
-
-            } catch (SecurityException sec) {
-//                displayDialog(sec.getMessage());
-            }
-        } else {
-            EasyPermissions.requestPermissions(requireActivity(), getString(R.string.msg_request_permissions), LOCATION_PERMISSIONS_CODE, LOCATION_PERMISSIONS_LIST);
-        }
-    }
-
-    private void centerMap(LatLng aLatLng) {
-        mGoogleMap.clear();
-        try {
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(aLatLng));
-            mGoogleMap.animateCamera(CameraUpdateFactory.zoomTo(15));
-            mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
-            mGoogleMap.setMyLocationEnabled(true);
-
-            mMapViewModel.getNearbyResponse(aLatLng, 100).observe(this, aNearbyResponses -> mMapViewModel.plotAirportsOnMap(aNearbyResponses, mGoogleMap));
-
-            mGoogleMap.setOnMarkerClickListener(this);
-
-        } catch (SecurityException sec) {
-//            displayDialog(sec.getMessage());
-        }
-    }
-
-    @Override
-    public void onMapReady(GoogleMap aGoogleMap) {
-        mGoogleMap = aGoogleMap;
-        getCurrentLocation();
-    }
-
-    @Override
-    public boolean onMarkerClick(Marker aMarker) {
-        return false;
     }
 }

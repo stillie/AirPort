@@ -8,10 +8,11 @@ android {
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
-        buildConfigField 'String', 'AVIATION_API_NEARBY_URL', '"v2/public/nearby?key=9f69bc-91f08b"'
-        buildConfigField 'String', 'BASE_URL', '"http://aviation-edge.com/"'
+        buildConfigField 'String', 'AVIATION_API_NEARBY_URL', '"nearby?key=96152d-7e777c"'
+        buildConfigField 'String', 'AVIATION_API_SCHEDULE_URL', '"timetable?key=96152d-7e777c"'
+        buildConfigField 'String', 'AVIATION_API_CITIES_URL', '"cityDatabase?key=96152d-7e777c"'
+        buildConfigField 'String', 'BASE_URL', '"http://aviation-edge.com/v2/public/"'
         resValue "string", "google_maps_key", "AIzaSyCWHXpo_CAHU5W9KvrXld6D8FU7SBARxiY"
-
 
 
     }
@@ -44,9 +45,11 @@ dependencies {
     def crashlytics_version = "2.9.6"
     def timber_version = "4.7.1"
     def okhttp3_version = "3.9.1"
-    def google_services = "16.1.0"
+    def room_version = "1.1.1"
+    def needle_version = "1.0.0"
     def google_play_services = "16.0.0"
     def stetho_version = "1.5.0"
+    def parceler_version = "1.1.12"
 
     // Support libraries
     implementation "com.android.support:appcompat-v7:$support_version"
@@ -54,11 +57,18 @@ dependencies {
     implementation "com.android.support:design:$support_version"
     implementation "com.android.support:cardview-v7:$support_version"
 
+    // Room database libraries
+    implementation "android.arch.persistence.room:runtime:$room_version"
+    annotationProcessor "android.arch.persistence.room:compiler:$room_version"
+
     //fused location
     implementation "com.google.android.gms:play-services-location:$fused_location_version"
 
     // Easy Permissions
     implementation "pub.devrel:easypermissions:$easy_version"
+
+    //Needle Multithreading library for Android. https://github.com/ZsoltSafrany/needle
+    implementation "com.zsoltsafrany:needle:$needle_version"
 
     // Constraint layout
     implementation "com.android.support.constraint:constraint-layout:$constraint_layout_version"
@@ -107,6 +117,10 @@ dependencies {
 
     // Timber
     implementation "com.jakewharton.timber:timber:$timber_version"
+
+    //Parceler
+    implementation "org.parceler:parceler-api:$parceler_version"
+    annotationProcessor "org.parceler:parceler:$parceler_version"
 
 
 }

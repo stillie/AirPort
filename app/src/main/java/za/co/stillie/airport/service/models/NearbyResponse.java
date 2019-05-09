@@ -3,47 +3,51 @@ package za.co.stillie.airport.service.models;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.parceler.Parcel;
+
+@SuppressWarnings("WeakerAccess")
+@Parcel
 public class NearbyResponse {
 
     @SerializedName("nameAirport")
-    @Expose
-    private String mNameAirport;
+
+    String mNameAirport;
     @SerializedName("codeIataAirport")
-    @Expose
-    private String mCodeIataAirport;
+
+    String mCodeIataAirport;
     @SerializedName("codeIcaoAirport")
-    @Expose
-    private String mCodeIcaoAirport;
+
+    String mCodeIcaoAirport;
     @SerializedName("nameTranslations")
-    @Expose
-    private String mNameTranslations;
+
+    String mNameTranslations;
     @SerializedName("latitudeAirport")
-    @Expose
-    private String mLatitudeAirport;
+
+    double mLatitudeAirport;
     @SerializedName("longitudeAirport")
-    @Expose
-    private String mLongitudeAirport;
+
+    double mLongitudeAirport;
     @SerializedName("timezone")
-    @Expose
-    private String mTimezone;
+
+    String mTimezone;
     @SerializedName("GMT")
-    @Expose
-    private String mGmt;
+
+    String mGmt;
     @SerializedName("phone")
-    @Expose
-    private String mPhone;
+
+    String mPhone;
     @SerializedName("nameCountry")
-    @Expose
-    private String mNameCountry;
+
+    String mNameCountry;
     @SerializedName("codeIso2Country")
-    @Expose
-    private String mCodeIso2Country;
+
+    String mCodeIso2Country;
     @SerializedName("codeIataCity")
-    @Expose
-    private String mCodeIataCity;
+
+    String mCodeIataCity;
     @SerializedName("distance")
-    @Expose
-    private String mDistance;
+
+    String mDistance;
 
     public String getNameAirport() {
         return mNameAirport;
@@ -77,19 +81,19 @@ public class NearbyResponse {
         mNameTranslations = aNameTranslations;
     }
 
-    public String getLatitudeAirport() {
+    public double getLatitudeAirport() {
         return mLatitudeAirport;
     }
 
-    public void setLatitudeAirport(String aLatitudeAirport) {
+    public void setLatitudeAirport(double aLatitudeAirport) {
         mLatitudeAirport = aLatitudeAirport;
     }
 
-    public String getLongitudeAirport() {
+    public double getLongitudeAirport() {
         return mLongitudeAirport;
     }
 
-    public void setLongitudeAirport(String aLongitudeAirport) {
+    public void setLongitudeAirport(double aLongitudeAirport) {
         mLongitudeAirport = aLongitudeAirport;
     }
 

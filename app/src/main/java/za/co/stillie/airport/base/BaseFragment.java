@@ -9,8 +9,8 @@ import dagger.android.support.AndroidSupportInjection;
 import za.co.stillie.airport.utils.LoggingHelper;
 
 public class BaseFragment extends Fragment {
-    protected static final int LOCATION_PERMISSIONS_CODE = 1234;
-    protected static final String[] LOCATION_PERMISSIONS_LIST = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+    public static final int LOCATION_PERMISSIONS_CODE = 1234;
+    public static final String[] LOCATION_PERMISSIONS_LIST = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
 
 
     public BaseActivity getBaseActivity() {

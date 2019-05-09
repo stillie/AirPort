@@ -1,14 +1,21 @@
 package za.co.stillie.airport.ui.map;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Application;
 import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.Observer;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
-import android.text.TextUtils;
+import android.support.annotation.Nullable;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
@@ -21,21 +28,41 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 import za.co.stillie.airport.R;
 import za.co.stillie.airport.base.BaseViewModel;
 import za.co.stillie.airport.service.models.NearbyResponse;
 import za.co.stillie.airport.utils.LoggingHelper;
 
-public class MapViewModel extends BaseViewModel {
+import static za.co.stillie.airport.base.BaseFragment.LOCATION_PERMISSIONS_CODE;
+import static za.co.stillie.airport.base.BaseFragment.LOCATION_PERMISSIONS_LIST;
+
+public class MapViewModel extends BaseViewModel implements GoogleMap.OnMarkerClickListener {
 
     private final Application mApplication;
     private final MapRepository mMapRepository;
-
+    @SuppressLint("StaticFieldLeak")
+    private Activity mActivity;
+    private List<NearbyResponse> mNearbyAirportsList;
+    private GoogleMap mGoogleMap;
+    private final Observer<List<NearbyResponse>> mListObserver = new Observer<List<NearbyResponse>>() {
+        @Override
+        public void onChanged(@Nullable List<NearbyResponse> aNearbyResponses) {
+            if (aNearbyResponses != null && !aNearbyResponses.isEmpty()) {
+                mNearbyAirportsList = aNearbyResponses;
+                plotAirportsOnMap(mNearbyAirportsList);
+            }
+        }
+    };
+    private MutableLiveData<LatLng> mCurrentLatLng = new MutableLiveData<>();
+    private MarkerOnClick mMarkerOnClick;
 
     @Inject
     public MapViewModel(Application aApplication, MapRepository aMapRepository) {
         mApplication = aApplication;
         mMapRepository = aMapRepository;
+        mCurrentLatLng.observeForever(this::centerMap);
     }
 
     /**
@@ -51,57 +78,129 @@ public class MapViewModel extends BaseViewModel {
         return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 
+    private void centerMap(LatLng aLatLng) {
+        mGoogleMap.clear();
+        try {
+            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(aLatLng));
+            mGoogleMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+            mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
+            mGoogleMap.setMyLocationEnabled(true);
+
+            getNearbyResponse(aLatLng, 100).observeForever(mListObserver);
+
+        } catch (SecurityException sec) {
+//            displayDialog(sec.getMessage());
+        }
+    }
+
+    public void initMap(Activity aActivity, MapView aMapView) {
+        mActivity = aActivity;
+        aMapView.getMapAsync(aGoogleMap -> {
+            mGoogleMap = aGoogleMap;
+            getCurrentLocation();
+        });
+    }
+
+    @AfterPermissionGranted(LOCATION_PERMISSIONS_CODE)
+    private void getCurrentLocation() {
+        if (EasyPermissions.hasPermissions(mActivity, LOCATION_PERMISSIONS_LIST)) {
+
+            FusedLocationProviderClient fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(mActivity);
+            try {
+
+                fusedLocationProviderClient.getLastLocation().addOnSuccessListener(mActivity, location -> {
+                    if (location != null) {
+                        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                        mCurrentLatLng.setValue(latLng);
+                    } else {
+//                        displayDialog(getString(R.string.msg_location_error));
+                    }
+                });
+
+            } catch (SecurityException sec) {
+//                displayDialog(sec.getMessage());
+            }
+        } else {
+            EasyPermissions.requestPermissions(mActivity, mApplication.getString(R.string.msg_request_permissions), LOCATION_PERMISSIONS_CODE, LOCATION_PERMISSIONS_LIST);
+        }
+    }
+
     public MutableLiveData<List<NearbyResponse>> getNearbyResponse(LatLng aLatLng, int aDistance) {
+        mMapRepository.getNearby(aLatLng, aDistance).observeForever(mListObserver);
         return mMapRepository.getNearby(aLatLng, aDistance);
     }
 
-    void plotAirportsOnMap(List<NearbyResponse> airportModelList, GoogleMap aGoogleMap) {
+    private void plotAirportsOnMap(List<NearbyResponse> airportModelList) {
 
-        List<NearbyResponse> airportPlotPoint = new ArrayList<>();
+        mGoogleMap.setOnMarkerClickListener(this);
 
-        for (NearbyResponse aNearbyAirportModel : airportModelList) {
-            if (!TextUtils.isEmpty(aNearbyAirportModel.getLatitudeAirport())
-                    && Double.parseDouble(aNearbyAirportModel.getLatitudeAirport()) != 0
-                    && !TextUtils.isEmpty(aNearbyAirportModel.getLongitudeAirport())
-                    && Double.parseDouble(aNearbyAirportModel.getLongitudeAirport()) != 0) {
-                airportPlotPoint.add(aNearbyAirportModel);
-            }
-        }
+        List<NearbyResponse> airportPlotPoint = new ArrayList<>(airportModelList);
 
         if (airportPlotPoint.size() > 0) {
-            plotAirportPoint(airportPlotPoint, aGoogleMap);
+            plotAirportPoint(airportPlotPoint);
         }
     }
 
-    private void plotAirportPoint(List<NearbyResponse> airportPlotPointList, GoogleMap aGoogleMap) {
-        if (aGoogleMap != null) {
+    void setMarkerOnClick(MarkerOnClick aMarkerOnClick) {
+        mMarkerOnClick = aMarkerOnClick;
+    }
+
+    private void plotAirportPoint(List<NearbyResponse> airportPlotPointList) {
+        if (mGoogleMap != null) {
 
             try {
-                aGoogleMap.clear();
-                aGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
+                mGoogleMap.clear();
+                mGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
                 ArrayList<Marker> markers = new ArrayList<>();
                 LatLngBounds.Builder builder = new LatLngBounds.Builder();
-                Drawable mapIcon = mApplication.getResources().getDrawable(R.drawable.ic_airport_location);
+                Drawable mapIcon = mApplication.getResources().getDrawable(R.drawable.ic_pin);
                 BitmapDescriptor marker_Icon = getMarkerIconFromDrawable(mapIcon);
-
                 for (NearbyResponse aNearbyAirportModel : airportPlotPointList) {
-                    LatLng airportLatLng = new LatLng(Double.parseDouble(aNearbyAirportModel.getLatitudeAirport()), Double.parseDouble(aNearbyAirportModel.getLongitudeAirport()));
+                    LatLng airportLatLng = new LatLng(aNearbyAirportModel.getLatitudeAirport(), aNearbyAirportModel.getLongitudeAirport());
                     MarkerOptions markerOptions = new MarkerOptions().position(airportLatLng);
+                    markerOptions.title(aNearbyAirportModel.getNameAirport());
                     markerOptions.icon(marker_Icon);
                     markerOptions.flat(true);
                     builder.include(airportLatLng);
-                    markers.add(aGoogleMap.addMarker(markerOptions));
+                    markers.add(mGoogleMap.addMarker(markerOptions));
                 }
-                moveCameraToShowMarkers(aGoogleMap, builder.build());
+                moveCameraToShowMarkers(builder.build());
             } catch (Exception ex) {
                 LoggingHelper.error("Plot airport error", ex);
             }
         }
     }
 
-    private void moveCameraToShowMarkers(GoogleMap map, LatLngBounds bounds) {
+    private void moveCameraToShowMarkers(LatLngBounds bounds) {
         int width = mApplication.getResources().getDisplayMetrics().widthPixels;
         int padding = (int) (width * 0.20);
-        map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+    }
+
+    @Nullable
+    private NearbyResponse getNearbyAirportByCoords(Marker aMarker) {
+        for (NearbyResponse nearbyAirport : mNearbyAirportsList) {
+            if (doesMarkerMatchNearbyAirport(aMarker, nearbyAirport)) {
+                return nearbyAirport;
+            }
+        }
+        return null;
+    }
+
+    private boolean doesMarkerMatchNearbyAirport(Marker aMarker, NearbyResponse aNearbyResponse) {
+        return aMarker.getPosition().latitude == aNearbyResponse.getLatitudeAirport() && aMarker.getPosition().longitude == aNearbyResponse.getLongitudeAirport();
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker aMarker) {
+        NearbyResponse nearbyResponse = getNearbyAirportByCoords(aMarker);
+        if (nearbyResponse != null) {
+            mMarkerOnClick.onMarkerClicked(nearbyResponse);
+        }
+        return false;
+    }
+
+    public interface MarkerOnClick {
+        void onMarkerClicked(NearbyResponse aNearbyResponse);
     }
 }

@@ -1,10 +1,9 @@
-package za.co.stillie.airport.ui.map;
+package za.co.stillie.airport.ui.flight_schedule;
 
 import android.app.Application;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -24,37 +23,36 @@ import retrofit2.Response;
 import za.co.stillie.airport.base.BaseRepository;
 import za.co.stillie.airport.service.ApiService;
 import za.co.stillie.airport.service.models.ErrorResponse;
-import za.co.stillie.airport.service.models.NearbyResponse;
+import za.co.stillie.airport.service.models.FlightScheduleResponse;
 
-public class MapRepository extends BaseRepository {
+public class FlightScheduleRepository extends BaseRepository {
+
     private final ApiService mApiService;
 
     @Inject
-    public MapRepository(Application aApplication, ApiService aApiService, LocalBroadcastManager aLocalBroadcastManager) {
+    public FlightScheduleRepository(Application aApplication, LocalBroadcastManager aLocalBroadcastManager, ApiService aApiService) {
         super(aLocalBroadcastManager, aApplication);
         mApiService = aApiService;
     }
 
-    public MutableLiveData<List<NearbyResponse>> getNearby(LatLng aLatLng, int distance) {
+    public MutableLiveData<List<FlightScheduleResponse>> getFlightSchedule(String iataCode, String aType) {
 
-        final MutableLiveData<List<NearbyResponse>> mNearbyResponseMutableLiveData = new MutableLiveData<>();
+        final MutableLiveData<List<FlightScheduleResponse>> mutableLiveData = new MutableLiveData<>();
 
-        Call<Object> call = mApiService.executeNearByCall(aLatLng.latitude, aLatLng.longitude, distance);
+        Call<Object> call = mApiService.executeScheduleCall(iataCode, aType);
 
         call.enqueue(new Callback<Object>() {
             @Override
             public void onResponse(@NotNull Call<Object> call, @NotNull Response<Object> response) {
-                if (response.body() == null) return;
-                String stringGson = new Gson().toJson(response.body());
-
                 try {
+                    String stringGson = new Gson().toJson(response.body());
                     Object responseObject = new JSONTokener(stringGson).nextValue();
                     if (responseObject instanceof JSONObject) {
                         handleJsonObjectResponse(new Gson().fromJson(stringGson, ErrorResponse.class));
                     } else if (responseObject instanceof JSONArray) {
                         JSONArray jsonArray = new JSONArray(stringGson);
                         if (jsonArray.length() > 0) {
-                            mNearbyResponseMutableLiveData.setValue(new Gson().fromJson(jsonArray.toString(), new TypeToken<List<NearbyResponse>>() {
+                            mutableLiveData.setValue(new Gson().fromJson(jsonArray.toString(), new TypeToken<List<FlightScheduleResponse>>() {
                             }.getType()));
                         }
                     }
@@ -68,6 +66,6 @@ public class MapRepository extends BaseRepository {
                 sendErrorMessage(t.getLocalizedMessage());
             }
         });
-        return mNearbyResponseMutableLiveData;
+        return mutableLiveData;
     }
 }

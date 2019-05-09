@@ -14,5 +14,4 @@ public abstract class FragmentBuilder {
     @ContributesAndroidInjector
     abstract MapFragment mapFragment();
 
-
 }

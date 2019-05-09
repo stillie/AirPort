@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="flight"
+            type="za.co.stillie.airport.service.models.FlightScheduleResponse" />
+    </data>
+
+    <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/planeIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_airport_location"
+            app:tint="@color/light_grey" />
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/airlinesCompanyName"
+            style="@style/DarkHeading"
+            android:layout_width="0dp"
+
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:text="@{flight.airline.name}"
+            app:layout_constraintBottom_toBottomOf="@+id/planeIcon"
+            app:layout_constraintStart_toEndOf="@+id/planeIcon"
+            app:layout_constraintTop_toTopOf="@+id/planeIcon"
+            tools:text="South African Airways" />
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/airlineStatus"
+            style="@style/LightHeading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@{flight.status}"
+            app:setFlightStatus="@{flight.status}"
+            android:drawableStart="@drawable/ic_flight_status"
+            android:drawablePadding="10dp"
+            app:layout_constraintBaseline_toBaselineOf="@+id/airlinesCompanyName"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/airlinesCompanyName"
+            tools:text="Departed" />
+
+        <View
+            android:id="@+id/view"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:background="@color/light_grey"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/airlinesCompanyName" />
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/departureTime"
+            style="@style/LightHeading"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/lbl_departure_time"
+            app:layout_constraintEnd_toStartOf="@+id/flightNumber"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/view" />
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/flightNumber"
+            style="@style/LightHeading"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/lbl_flight_number"
+            app:layout_constraintBaseline_toBaselineOf="@+id/departureTime"
+            app:layout_constraintEnd_toStartOf="@+id/destination"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/departureTime" />
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/destination"
+            style="@style/LightHeading"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/lbl_destination"
+            app:layout_constraintBaseline_toBaselineOf="@+id/flightNumber"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/flightNumber" />
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/departureTimeValue"
+            style="@style/DarkHeading"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:text="@{flight.departure.scheduledTime}"
+            formatTime="@{flight.departure.scheduledTime}"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/departureTime"
+            app:layout_constraintTop_toBottomOf="@+id/departureTime"
+            tools:text="13:00" />
+
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/destinationValue"
+            style="@style/DarkHeading"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="16dp"
+            android:text="@{flight.arrival.iataCode}"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/destination"
+            app:layout_constraintTop_toBottomOf="@+id/departureTime"
+            tools:text="Johanneburg" />
+
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/flightNumberValue"
+            style="@style/DarkHeading"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:text="@{flight.flight.number}"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/flightNumber"
+            app:layout_constraintTop_toBottomOf="@+id/departureTime"
+            tools:text="VA100S" />
+    </android.support.constraint.ConstraintLayout>
+</layout>

@@ -1,5 +1,7 @@
 package za.co.stillie.airport.ui;
 
+import android.content.Context;
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 
@@ -12,6 +14,10 @@ public class HomeActivity extends BaseActivity {
 
 
     private ActivityHomeBinding mActivityHomeBinding;
+
+    public static Intent getStartIntent(Context aContext) {
+        return new Intent(aContext, HomeActivity.class);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -7,13 +7,8 @@ import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
-import com.google.gson.Gson;
-
-import org.jetbrains.annotations.NotNull;
-
 import javax.inject.Inject;
 
-import retrofit2.Response;
 import za.co.stillie.airport.BuildConfig;
 import za.co.stillie.airport.R;
 import za.co.stillie.airport.service.models.ErrorResponse;
@@ -35,22 +30,24 @@ public class BaseRepository {
         mErrorMutableLiveData.observeForever(observer);
     }
 
-    protected void handleJsonObjectResponse(@NotNull Response<Object> aResponse) {
-        String jsonObject = new Gson().toJson(aResponse.body());
-        handleErrorResponse(new Gson().fromJson(jsonObject, ErrorResponse.class));
+    protected void handleJsonObjectResponse(ErrorResponse aResponse) {
+        handleErrorResponse(aResponse);
     }
 
     private void handleErrorResponse(ErrorResponse baseResponseModel) {
-        if (baseResponseModel == null || baseResponseModel.getError() == null || TextUtils.isEmpty(baseResponseModel.getError().getText())) {
+        if (baseResponseModel == null || baseResponseModel.getError() == null) {
             sendGenericErrorMessage();
             return;
         }
-        sendErrorMessage(baseResponseModel.getError().getText());
+        if (baseResponseModel.getError() != null)
+            sendErrorMessage(baseResponseModel.getError().getText());
+        else
+            sendGenericErrorMessage();
     }
 
     protected void sendErrorMessage(String aMessage) {
         Intent intent = new Intent(BROADCAST_ERROR_MESSAGE);
-        intent.putExtra(INTENT_ERROR_MESSAGE, aMessage);
+        intent.putExtra(INTENT_ERROR_MESSAGE, !TextUtils.isEmpty(aMessage) ? aMessage : "");
         mLocalBroadcastManager.sendBroadcast(intent);
     }
 
