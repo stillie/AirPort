@@ -8,18 +8,23 @@ android {
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
+
         buildConfigField 'String', 'AVIATION_API_NEARBY_URL', '"nearby?key=76c2af-01a903"'
         buildConfigField 'String', 'AVIATION_API_SCHEDULE_URL', '"timetable?key=76c2af-01a903"'
-        buildConfigField 'String', 'AVIATION_API_CITIES_URL', '"cityDatabase?key=76c2af-01a903"'
         buildConfigField 'String', 'BASE_URL', '"http://aviation-edge.com/v2/public/"'
         resValue "string", "google_maps_key", "AIzaSyCWHXpo_CAHU5W9KvrXld6D8FU7SBARxiY"
-
 
     }
     buildTypes {
         release {
+
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            buildConfigField 'String', 'AVIATION_API_NEARBY_URL', '"getAirports"'
+            buildConfigField 'String', 'AVIATION_API_SCHEDULE_URL', '"getAirportSchedule"'
+            buildConfigField 'String', 'BASE_URL', '"http://5cd54fd69c31c600148a979b.mockapi.io/api/v1/"'
         }
     }
     dataBinding {
