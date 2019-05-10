@@ -1,10 +1,13 @@
 <resources>
     <string name="app_name">Vlugsoektog (Flight Searcher)</string>
-    <string name="generic_error_message">An error has occurred, please try again</string>
-    <string name="lbl_OK">Okay</string>
-    <string name="msg_request_permissions">Please accept location permissions</string>
+    <string name="generic_error_message">Sorry bru, something bad happened</string>
+    <string name="lbl_OK">Cool bro</string>
+    <string name="lbl_Cancel">Naught bru, not now</string>
+    <string name="msg_request_permissions">Ey, bru I need to find your location or things between us aren\'t going to work out</string>
+    <string name="msg_location_error">Sorry brosky! Can\'t seem to find you</string>
     <string name="lbl_destination">Destination</string>
     <string name="lbl_flight_number">Flight number</string>
     <string name="lbl_departure_time">Departure Time</string>
     <string name="lbl_location_type">Airport</string>
+    <string name="lbl_navigate_to_airport">Are you lost? Want me to help a brother get to the airport?</string>
 </resources>

@@ -9,13 +9,13 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
@@ -59,17 +59,17 @@ public class MapViewModel extends BaseViewModel implements GoogleMap.OnMarkerCli
     private MarkerOnClick mMarkerOnClick;
 
     @Inject
-    public MapViewModel(Application aApplication, MapRepository aMapRepository) {
+    MapViewModel(Application aApplication, MapRepository aMapRepository, LocalBroadcastManager aLocalBroadcastManager) {
+        super(aLocalBroadcastManager);
         mApplication = aApplication;
         mMapRepository = aMapRepository;
-        mCurrentLatLng.observeForever(this::centerMap);
+        mCurrentLatLng.observeForever(aLatLng -> {
+            if (aLatLng == null) return;
+            centerMap(aLatLng);
+        });
     }
 
-    /**
-     * @param drawable drawable to use a mp marker
-     * @return Bitmap descriptor of icon
-     */
-    public static BitmapDescriptor getMarkerIconFromDrawable(Drawable drawable) {
+    private static BitmapDescriptor getMarkerIconFromDrawable(Drawable drawable) {
         Canvas canvas = new Canvas();
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
         canvas.setBitmap(bitmap);
@@ -86,14 +86,14 @@ public class MapViewModel extends BaseViewModel implements GoogleMap.OnMarkerCli
             mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
             mGoogleMap.setMyLocationEnabled(true);
 
-            getNearbyResponse(aLatLng, 100).observeForever(mListObserver);
+            getNearbyResponse(aLatLng).observeForever(mListObserver);
 
         } catch (SecurityException sec) {
-//            displayDialog(sec.getMessage());
+            sendErrorMessage(sec.getMessage());
         }
     }
 
-    public void initMap(Activity aActivity, MapView aMapView) {
+    void initMap(Activity aActivity, MapView aMapView) {
         mActivity = aActivity;
         aMapView.getMapAsync(aGoogleMap -> {
             mGoogleMap = aGoogleMap;
@@ -113,21 +113,20 @@ public class MapViewModel extends BaseViewModel implements GoogleMap.OnMarkerCli
                         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
                         mCurrentLatLng.setValue(latLng);
                     } else {
-//                        displayDialog(getString(R.string.msg_location_error));
+                        sendErrorMessage(mApplication.getString(R.string.msg_location_error));
                     }
                 });
 
             } catch (SecurityException sec) {
-//                displayDialog(sec.getMessage());
+                sendErrorMessage(sec.getMessage());
             }
         } else {
             EasyPermissions.requestPermissions(mActivity, mApplication.getString(R.string.msg_request_permissions), LOCATION_PERMISSIONS_CODE, LOCATION_PERMISSIONS_LIST);
         }
     }
 
-    public MutableLiveData<List<NearbyResponse>> getNearbyResponse(LatLng aLatLng, int aDistance) {
-        mMapRepository.getNearby(aLatLng, aDistance).observeForever(mListObserver);
-        return mMapRepository.getNearby(aLatLng, aDistance);
+    private MutableLiveData<List<NearbyResponse>> getNearbyResponse(LatLng aLatLng) {
+        return mMapRepository.getNearby(aLatLng, 100);
     }
 
     private void plotAirportsOnMap(List<NearbyResponse> airportModelList) {
@@ -147,11 +146,9 @@ public class MapViewModel extends BaseViewModel implements GoogleMap.OnMarkerCli
 
     private void plotAirportPoint(List<NearbyResponse> airportPlotPointList) {
         if (mGoogleMap != null) {
-
             try {
                 mGoogleMap.clear();
                 mGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
-                ArrayList<Marker> markers = new ArrayList<>();
                 LatLngBounds.Builder builder = new LatLngBounds.Builder();
                 Drawable mapIcon = mApplication.getResources().getDrawable(R.drawable.ic_pin);
                 BitmapDescriptor marker_Icon = getMarkerIconFromDrawable(mapIcon);
@@ -161,8 +158,8 @@ public class MapViewModel extends BaseViewModel implements GoogleMap.OnMarkerCli
                     markerOptions.title(aNearbyAirportModel.getNameAirport());
                     markerOptions.icon(marker_Icon);
                     markerOptions.flat(true);
+                    mGoogleMap.addMarker(markerOptions);
                     builder.include(airportLatLng);
-                    markers.add(mGoogleMap.addMarker(markerOptions));
                 }
                 moveCameraToShowMarkers(builder.build());
             } catch (Exception ex) {

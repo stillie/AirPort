@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/flightState"
+        android:title="Departure"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/navigateToAirport"
+        android:icon="@drawable/ic_baseline_directions_24px"
+        android:title="Navigate to airport"
+        app:showAsAction="always" />
+</menu>

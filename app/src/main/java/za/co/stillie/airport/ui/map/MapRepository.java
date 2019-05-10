@@ -35,24 +35,26 @@ public class MapRepository extends BaseRepository {
         mApiService = aApiService;
     }
 
-    public MutableLiveData<List<NearbyResponse>> getNearby(LatLng aLatLng, int distance) {
+    MutableLiveData<List<NearbyResponse>> getNearby(LatLng aLatLng, int distance) {
 
         final MutableLiveData<List<NearbyResponse>> mNearbyResponseMutableLiveData = new MutableLiveData<>();
 
+        showProgress();
         Call<Object> call = mApiService.executeNearByCall(aLatLng.latitude, aLatLng.longitude, distance);
 
         call.enqueue(new Callback<Object>() {
             @Override
             public void onResponse(@NotNull Call<Object> call, @NotNull Response<Object> response) {
+                hideProgress();
                 if (response.body() == null) return;
-                String stringGson = new Gson().toJson(response.body());
+                String jsonObject = new Gson().toJson(response.body());
 
                 try {
-                    Object responseObject = new JSONTokener(stringGson).nextValue();
+                    Object responseObject = new JSONTokener(jsonObject).nextValue();
                     if (responseObject instanceof JSONObject) {
-                        handleJsonObjectResponse(new Gson().fromJson(stringGson, ErrorResponse.class));
+                        handleJsonObjectResponse(new Gson().fromJson(jsonObject, ErrorResponse.class));
                     } else if (responseObject instanceof JSONArray) {
-                        JSONArray jsonArray = new JSONArray(stringGson);
+                        JSONArray jsonArray = new JSONArray(jsonObject);
                         if (jsonArray.length() > 0) {
                             mNearbyResponseMutableLiveData.setValue(new Gson().fromJson(jsonArray.toString(), new TypeToken<List<NearbyResponse>>() {
                             }.getType()));
@@ -66,6 +68,7 @@ public class MapRepository extends BaseRepository {
             @Override
             public void onFailure(@NotNull Call<Object> call, @NotNull Throwable t) {
                 sendErrorMessage(t.getLocalizedMessage());
+                hideProgress();
             }
         });
         return mNearbyResponseMutableLiveData;

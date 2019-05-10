@@ -16,7 +16,9 @@ import za.co.stillie.airport.service.models.ErrorResponse;
 public class BaseRepository {
 
     public static final String BROADCAST_ERROR_MESSAGE = BuildConfig.APPLICATION_ID + ".BROADCAST_ERROR_MESSAGE";
+    public static final String BROADCAST_PROGRESS_DIALOG = BuildConfig.APPLICATION_ID + ".BROADCAST_PROGRESS_DIALOG";
     public static final String INTENT_ERROR_MESSAGE = "INTENT_ERROR_MESSAGE";
+    public static final String INTENT_SHOW_PROGRESS_DIALOG = "INTENT_SHOW_PROGRESS_DIALOG";
 
     private final LocalBroadcastManager mLocalBroadcastManager;
     private final Application mApplication;
@@ -28,6 +30,20 @@ public class BaseRepository {
         mApplication = aApplication;
         Observer<String> observer = this::sendErrorMessage;
         mErrorMutableLiveData.observeForever(observer);
+    }
+
+    private void sendProgressDialog(boolean shouldShow) {
+        Intent progressDialog = new Intent(BROADCAST_PROGRESS_DIALOG);
+        progressDialog.putExtra(INTENT_SHOW_PROGRESS_DIALOG, shouldShow);
+        mLocalBroadcastManager.sendBroadcast(progressDialog);
+    }
+
+    public void showProgress() {
+        sendProgressDialog(true);
+    }
+
+    public void hideProgress() {
+        sendProgressDialog(false);
     }
 
     protected void handleJsonObjectResponse(ErrorResponse aResponse) {

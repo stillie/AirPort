@@ -27,10 +27,19 @@ import dagger.android.DispatchingAndroidInjector;
 import dagger.android.HasActivityInjector;
 import dagger.android.support.HasSupportFragmentInjector;
 import za.co.stillie.airport.R;
+import za.co.stillie.airport.ui.CustomLoadingDialog;
 import za.co.stillie.airport.utils.LoggingHelper;
+
+import static za.co.stillie.airport.base.BaseRepository.BROADCAST_PROGRESS_DIALOG;
+import static za.co.stillie.airport.base.BaseRepository.INTENT_SHOW_PROGRESS_DIALOG;
 
 @SuppressLint("Registered")
 public class BaseActivity extends AppCompatActivity implements HasActivityInjector, HasSupportFragmentInjector {
+    @Inject
+    DispatchingAndroidInjector<Activity> mDispatchingAndroidInjectorActivity;
+    @Inject
+    DispatchingAndroidInjector<Fragment> mDispatchingAndroidInjectorFragment;
+    private CustomLoadingDialog mAnimatedLoadingDialog;
     private final BroadcastReceiver mDialogBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -45,29 +54,22 @@ public class BaseActivity extends AppCompatActivity implements HasActivityInject
                 case BaseRepository.BROADCAST_ERROR_MESSAGE:
                     displayDialog(intent.getStringExtra(BaseRepository.INTENT_ERROR_MESSAGE));
                     break;
+                case BROADCAST_PROGRESS_DIALOG:
+                    boolean showProgress = intent.getBooleanExtra(INTENT_SHOW_PROGRESS_DIALOG, false);
+                    if (showProgress) {
+                        mAnimatedLoadingDialog.showProgress();
+                    } else {
+                        mAnimatedLoadingDialog.dismissProgress();
+                    }
+                    break;
             }
         }
     };
-    @Inject
-    DispatchingAndroidInjector<Activity> mDispatchingAndroidInjectorActivity;
-    @Inject
-    DispatchingAndroidInjector<Fragment> mDispatchingAndroidInjectorFragment;
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mDialogBroadcastReceiver);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        LocalBroadcastManager.getInstance(this).registerReceiver(mDialogBroadcastReceiver, getIntentFilters());
-    }
 
     private IntentFilter getIntentFilters() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BaseRepository.BROADCAST_ERROR_MESSAGE);
+        intentFilter.addAction(BROADCAST_PROGRESS_DIALOG);
         return intentFilter;
     }
 
@@ -88,6 +90,8 @@ public class BaseActivity extends AppCompatActivity implements HasActivityInject
         } catch (IllegalArgumentException aE) {
             LoggingHelper.error("Please add " + this.getClass().getSimpleName() + " to ActivityBuilder.class", aE);
         }
+        LocalBroadcastManager.getInstance(this).registerReceiver(mDialogBroadcastReceiver, getIntentFilters());
+        mAnimatedLoadingDialog = new CustomLoadingDialog(this);
         super.onCreate(savedInstanceState);
     }
 
@@ -126,7 +130,6 @@ public class BaseActivity extends AppCompatActivity implements HasActivityInject
         if (!TextUtils.isEmpty(aNegativeText)) {
             if (aNegativeOnClick == null) {
                 aNegativeOnClick = (dialog, which) -> {
-                    // Do nothing
                 };
             }
             builder.setNegativeButton(aNegativeText, aNegativeOnClick);

@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
 
+import pub.devrel.easypermissions.EasyPermissions;
 import za.co.stillie.airport.base.BaseFragment;
 import za.co.stillie.airport.databinding.FragmentMapBinding;
 import za.co.stillie.airport.di.MyViewModelFactory;
@@ -38,6 +39,7 @@ public class MapFragment extends BaseFragment implements MapViewModel.MarkerOnCl
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NotNull String[] permissions, @NotNull int[] grantResults) {
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == BaseFragment.LOCATION_PERMISSIONS_CODE) {
             mMapViewModel.initMap(getBaseActivity(), mFragmentMapBinding.mapView);
         }

@@ -31,7 +31,7 @@ public class FlightScheduleAdapter extends RecyclerView.Adapter<FlightScheduleAd
         return mFlightList.size();
     }
 
-    public void addItems(List<FlightScheduleResponse> items) {
+    void addItems(List<FlightScheduleResponse> items) {
         mFlightList.clear();
         mFlightList.addAll(items);
         notifyItemRangeChanged(0, mFlightList.size());
@@ -41,13 +41,13 @@ public class FlightScheduleAdapter extends RecyclerView.Adapter<FlightScheduleAd
 
         private final ItemFlightScheduleBinding mItemFlightScheduleBinding;
 
-        public ViewHolder(@NonNull ItemFlightScheduleBinding itemView) {
+        ViewHolder(@NonNull ItemFlightScheduleBinding itemView) {
             super(itemView.getRoot());
             mItemFlightScheduleBinding = itemView;
             mItemFlightScheduleBinding.executePendingBindings();
         }
 
-        public void bindView(FlightScheduleResponse schedule) {
+        void bindView(FlightScheduleResponse schedule) {
             mItemFlightScheduleBinding.setFlight(schedule);
         }
     }

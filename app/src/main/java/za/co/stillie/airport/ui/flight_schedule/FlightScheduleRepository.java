@@ -21,6 +21,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import za.co.stillie.airport.base.BaseRepository;
+import za.co.stillie.airport.enums.FlightStatus;
 import za.co.stillie.airport.service.ApiService;
 import za.co.stillie.airport.service.models.ErrorResponse;
 import za.co.stillie.airport.service.models.FlightScheduleResponse;
@@ -35,22 +36,24 @@ public class FlightScheduleRepository extends BaseRepository {
         mApiService = aApiService;
     }
 
-    public MutableLiveData<List<FlightScheduleResponse>> getFlightSchedule(String iataCode, String aType) {
+    MutableLiveData<List<FlightScheduleResponse>> getFlightSchedule(String aIataCode, FlightStatus aType) {
 
         final MutableLiveData<List<FlightScheduleResponse>> mutableLiveData = new MutableLiveData<>();
 
-        Call<Object> call = mApiService.executeScheduleCall(iataCode, aType);
+        showProgress();
+        Call<Object> call = mApiService.executeScheduleCall(aIataCode, aType.getFlightStatus());
 
         call.enqueue(new Callback<Object>() {
             @Override
             public void onResponse(@NotNull Call<Object> call, @NotNull Response<Object> response) {
+                hideProgress();
                 try {
-                    String stringGson = new Gson().toJson(response.body());
-                    Object responseObject = new JSONTokener(stringGson).nextValue();
+                    String jsonObject = new Gson().toJson(response.body());
+                    Object responseObject = new JSONTokener(jsonObject).nextValue();
                     if (responseObject instanceof JSONObject) {
-                        handleJsonObjectResponse(new Gson().fromJson(stringGson, ErrorResponse.class));
+                        handleJsonObjectResponse(new Gson().fromJson(jsonObject, ErrorResponse.class));
                     } else if (responseObject instanceof JSONArray) {
-                        JSONArray jsonArray = new JSONArray(stringGson);
+                        JSONArray jsonArray = new JSONArray(jsonObject);
                         if (jsonArray.length() > 0) {
                             mutableLiveData.setValue(new Gson().fromJson(jsonArray.toString(), new TypeToken<List<FlightScheduleResponse>>() {
                             }.getType()));
@@ -64,6 +67,7 @@ public class FlightScheduleRepository extends BaseRepository {
             @Override
             public void onFailure(@NotNull Call<Object> call, @NotNull Throwable t) {
                 sendErrorMessage(t.getLocalizedMessage());
+                hideProgress();
             }
         });
         return mutableLiveData;
