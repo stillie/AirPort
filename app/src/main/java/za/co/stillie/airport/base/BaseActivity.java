@@ -90,7 +90,6 @@ public class BaseActivity extends AppCompatActivity implements HasActivityInject
         } catch (IllegalArgumentException aE) {
             LoggingHelper.error("Please add " + this.getClass().getSimpleName() + " to ActivityBuilder.class", aE);
         }
-        LocalBroadcastManager.getInstance(this).registerReceiver(mDialogBroadcastReceiver, getIntentFilters());
         mAnimatedLoadingDialog = new CustomLoadingDialog(this);
         super.onCreate(savedInstanceState);
     }
@@ -98,9 +97,19 @@ public class BaseActivity extends AppCompatActivity implements HasActivityInject
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mDialogBroadcastReceiver);
     }
 
+    @Override
+    protected void onPause() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mDialogBroadcastReceiver);
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        LocalBroadcastManager.getInstance(this).registerReceiver(mDialogBroadcastReceiver, getIntentFilters());
+    }
 
     /**
      * Displays a dialog with no actions
